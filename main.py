@@ -7,9 +7,6 @@ KEY = "P3NT4G0N"
 
 db = MySQLdb.connect("localhost","root","parrot","parrot" )
 cursor = db.cursor()
-cursor.execute("SELECT VERSION()")
-data = cursor.fetchone()
-print "Database version : %s " % data
 
 def encode(key, string):
 	encoded_chars = []
@@ -106,9 +103,6 @@ def wake():
 			return '-3'
 	return '-1'
 
-@route('/sleep',method='DELETE')
-def sleep():
-	return 'TODO: signout'
 run(host='localhost', port=45678, debug=True, reloader=True)
 
 # ERRORS
