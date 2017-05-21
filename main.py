@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python -p
 
 import MySQLdb, base64, json, datetime
 from bottle import run, post, request, response, get, route
@@ -23,11 +23,17 @@ def chirp_post():
 	parrot = request.forms.get('parrot')
 	chirp = request.forms.get('chirp')
 	if(parrot != None and chirp != None):
-		sql = "INSERT INTO chirps (parrot, chirp) VALUES ('%s', '%s');" % (parrot, chirp)
+		sql = "INSERT INTO chirps (parrot, chirp) VALUES (%s, %s);"
+		print sql
 		try:
-			cursor.execute(sql)
+			cursor.execute(sql, (parrot, chirp))
 			db.commit()
-			return '1'
+			sql = "SELECT LAST_INSERT_ID();"
+			print sql
+			cursor.execute(sql)
+			results = cursor.fetchall()
+			for result in results:
+				return str(result[0])
 		except:
 			db.rollback()
 			return '-6'
@@ -43,6 +49,7 @@ def chirp_get():
 			cursor.execute(sql)
 			results = cursor.fetchall()
 			for result in results:
+				print result[0]
 				return result[0]
 		except:
 			return '-8'
@@ -56,7 +63,14 @@ def active():
 		results = cursor.fetchall()
 		data = []
 		for result in results:
-			data.append({'id':result[0], 'parrot':result[1], 'sent':str(result[2])})
+
+			sql = "SELECT uname FROM parrots WHERE id='%s'" % result[1]
+			cursor.execute(sql)
+			uname_results = cursor.fetchall()
+			for uname_result in uname_results:
+				uname = uname_result[0]
+
+			data.append({'id':result[0], 'parrot':uname, 'sent':str(result[2])})
 		return json.dumps(data)
 	except:
 		return '-9'
@@ -71,6 +85,7 @@ def birth():
 			return '-5'
 		pw = encode(KEY, pw)
 		sql = "INSERT INTO parrots (uname, pw) VALUES ('%s', '%s');" % (uname, pw)
+		print sql
 		try:
 			cursor.execute(sql)
 			db.commit()
@@ -103,7 +118,7 @@ def wake():
 			return '-3'
 	return '-1'
 
-run(host='localhost', port=45678, debug=True, reloader=True)
+run(host='0.0.0.0', port=45678, debug=True, reloader=True)
 
 # ERRORS
 # -1	request data error
